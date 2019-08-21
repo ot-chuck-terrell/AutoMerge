@@ -4,7 +4,7 @@ import configparser
 import logging
 import argparse
 from github.client import GitHubClient
-from github.types import GitHubError
+from github.types import GitHubError, Repository
 
 access_token = '969bb47731a804a5e4586f8d48904dd96c6dc686'
 master_branch = 'master'
@@ -61,57 +61,79 @@ def auto_merge(base: str, head: str, curr_rel: str, client: GitHubClient):
 
     logging.info('Found {} repositories matching head {}'.format(len(head_repos), head))
 
-    head_repo_pairs = [(repo.name, repo) for repo in head_repos]
+    # get corresponding repositories with the base branch
+    names = [repo.name for repo in head_repos]
+    repos_for_merge = [repo for repo in client.get_repositories(base) if repo.ref and repo.name in names]
 
-    # pair repositories with a matching base and head branch
-    base_head_repo_pairs = []
-    for repo in client.get_repositories(base):
-        for pairs in head_repo_pairs:
-            if repo.name == pairs[0]:
-                base_head_repo_pairs.append((repo, pairs[1]))
-
-    if not base_head_repo_pairs:
+    if not repos_for_merge:
         raise Exception("No repositories were found matching the base: {}".format(base))
 
-    logging.info('Found {} repositories matching base {}'.format(len(base_head_repo_pairs), base))
+    logging.info('Found {} repositories matching base {}'.format(len(repos_for_merge), base))
 
     logging.info('Preparing to merge the following repositories')
-    for pair in base_head_repo_pairs:
-        logging.info("{}: {} ==>> {}".format(pair[0].name, head, base))
+    for repo in repos_for_merge:
+        logging.info("{}: {} ==>> {}".format(repo.name, head, base))
 
+    (succeeded, unprocessed, _) = merge_branches(base, head, repos_for_merge)
 
+    logging.info('BASE MERGE COMPLETE')
 
+    # succeeded and unprocessed branches are eligible to be merged into the current release branch
+    eligible = []
+    eligible.extend(succeeded)
+    eligible.extend(unprocessed)
 
-    if not curr_rel:
+    if not curr_rel and not eligible:
         return
 
-    rel_repos = [repo for repo in client.get_repositories(curr_rel) if repo.ref]
-    
+    logging.info('Beginning merge of base into release branches...')
 
-def merge_branches(head_base_pairs: []):
+    # only merge repos that are eligible and have the current release branch
+    names = [repo.name for repo in eligible]
+    repos_for_merge = [repo for repo in client.get_repositories(curr_rel) if repo.ref and repo.name in names]
+
+    if not repos_for_merge:
+        raise Exception("No eligible repositories matching the current release branch")
+
+    merge_branches(curr_rel, base, repos_for_merge)
+
+
+def merge_branches(base: str, head: str, repos: [Repository]):
     succeeded = []
+    unprocessed = []
     failed = []
-    for pair in head_base_pairs:
-        logging.info('Merging {}'.format(pairs[0].name))
+    for repo in repos:
+        logging.info('Merging {}'.format(repo.name))
         try:
-            client.merge_branch(pair[0], base, head, 'Merge completed by AutoMerge utility')
+            merge_result = client.merge_branch(repo, base, head, 'Merge completed by AutoMerge utility')
             logging.info('Merge completed')
-            succeeded.append(pair)
+            succeeded.append((merge_result, repo))
         except GitHubError as err:
             if 'already merged' in err.message.lower():
-                logging.warn('{}: Already Merged'.format(pair[0].name))
+                logging.warn('{}: Already Merged'.format(repo.name))
+                unprocessed.append((err.message, repo))
             else:
-                logging.exception('{}: Failed merge. {}'.format(pair[0].name, err.message))
-            failed.append((err, pair))
+                logging.exception('{}: Failed merge. {}'.format(repo.name, err.message))
+                failed.append((err.message, repo))
 
-    print('Succeeded:')
-    print('----------')
-    for pair in succeeded:
-        print(pair[0].name)
-    print('----------')
+    print('-----SUCCEEDED-----')
+    for (result, repo) in succeeded:
+        print("{}: {}".format(repo.name, result.commit_url)
+    print('-------------------')
 
-    print('Failed:')
-    print('---------')
-    for pair in failed:
-        print('{}: {}'.format(pair[1][0].name, pair[1].message))
-    print('---------')
+    print('----UNPROCESSED-----')
+    for (message, repo) in failed:
+        print('{}: {}'.format(repo.name, message)
+    print('---------------')
+
+
+    print('----FAILED-----')
+    for (message, repo) in failed:
+        print('{}: {}'.format(repo.name, message)
+    print('---------------')
+
+    succeeded = [repo for (_, repo) in succeeded]
+    unprocessed = [repo for (_, repo) in unprocessed]
+    failed = [repo for (_, repo) in failed]
+
+    return (succeeded, unprocessed, failed)
