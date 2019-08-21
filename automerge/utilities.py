@@ -61,7 +61,7 @@ def merge_branches(base: str, head: str, repos: [Repository], client: GitHubClie
     for repo in repos:
         logging.info('Merging {}'.format(repo.name))
         try:
-            merge_result = client.merge_branch(repo, base, head, 'Merge completed by AutoMerge utility')
+            merge_result = client.merge_branch(repo, base, head, 'Merge of {} completed by AutoMerge utility'.format(head))
             logging.info('Merge completed')
             succeeded.append((merge_result, repo))
         except GitHubError as err:
