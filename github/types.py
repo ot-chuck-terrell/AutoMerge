@@ -75,7 +75,7 @@ class GitHubError(Exception):
             err_type = firstError['type']
         return GitHubError(err_type, firstError['message'])
 
-class GitHubPermissionError(Exception):
+class GitHubPermissionError(GitHubError):
     
     def __init__(self, message):
-        self.message = message
+        super().__init__('PERMISSION', message)

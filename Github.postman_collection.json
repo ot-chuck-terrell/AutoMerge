@@ -1,0 +1,139 @@
+{
+	"info": {
+		"_postman_id": "3635d817-42e9-43c5-b0e7-fdecff68c902",
+		"name": "Github",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "List Repositories Info (Graphql)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/vnd.github.v3+json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query {\n    organization(login: \"OneTechLP\") {\n        repositories(after: null, first: 100) {\n            edges {\n                cursor\n                node {\n                    id\n                    name\n                    viewerPermission\n                    ref(qualifiedName: \"refs/heads/AutoMergeFakeREL-0000\") {\n                        id\n                        name\n                        target {\n                            id\n                            oid\n                            commitUrl\n                            commitResourcePath\n                            ... on Commit {\n                                message\n                            }\n                        }\n                    }\n                }\n            }\n        }\n    }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "https://{{server}}/graphql",
+					"protocol": "https",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Merge Branches (Graphql)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/vnd.github.v3+json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation {\n    mergeBranch(input: {\n        base: \"AutoMergeFakeMaster\",\n        commitMessage: \"Merge completed by AutoMerge utility\",\n        head: \"AutoMergeFakeREL-0000\",\n        repositoryId: \"MDEwOlJlcG9zaXRvcnkxNjY1NjEy\"\n    }) {\n        mergeCommit {\n            id\n            oid\n            commitUrl\n            message\n        }\n    }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "https://{{server}}/graphql",
+					"protocol": "https",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Ref (Graphql)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/vnd.github.v3+json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation {\n    updateRef(input: {\n        clientMutationId: \"abracadabra\",\n        force: true,\n        oid: \"54ba2881d6c0b0e46d6fba62f78018c579f51ef0\",\n        refId: \"MDM6UmVmMTY2NTYxMjpBdXRvTWVyZ2VGYWtlTWFzdGVy\"\n    }) {\n        clientMutationId\n        ref {\n            id\n            name\n        }\n    }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "https://{{server}}/graphql",
+					"protocol": "https",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "accessToken",
+				"value": "not_a_token",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "6e318e9f-7a60-4ac2-aca1-013360ec5c38",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "458a9ccd-2d5e-4cd3-854a-9d98d72e76b1",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
