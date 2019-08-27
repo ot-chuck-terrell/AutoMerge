@@ -59,6 +59,47 @@ python AutoMerge master REL-0001 --current_rel_branch=REL-0002
 
 2. If you aren't certain where python3 is on your system, you might want to try `python3`, or directly reference from the executable location.
 
+## Running Tests
+
+There are a combination of unit and integration tests. The unit tests exist in `auto_merge_test.py`. The integration tests use dummy branches in the ProductFullfillment project to test the fetch and merge functionality, and then attempts to reset the state so the test can be run again. You will need to ensure your token is updated in the config.ini before running them. Hopefully, it works for you, but no promises... :(
+
+### Running Tests on Windows
+
+Unfortunately running the tests with Python on Windows is not completely straightforward.
+1. From the root directory of the project, `cd` into the `.\tests\` directory.
+2. In Powershell, set the `PYTHONPATH` environment variable with `$Env:PYTHONPATH += ";$(gl)"`
+3. Run the tests with Python 3. Notice there is no `.\` or extension on the test file. `python.exe -m unittest -bv auto_merge_test`
+
+
+The full output might look like:
+
+```
+C:\projects\AutoMerge [master ≡]> cd tests
+C:\projects\AutoMerge\tests [master ≡]> $Env:PYTHONPATH += ";$(gl)"
+C:\projects\AutoMerge\tests [master ≡]> C:\Python37\python.exe -m unittest -bv auto_merge_test      
+test_should_fail_repos_with_invalid_permissions (auto_merge_test.AutoMergeTest) ... ok
+test_should_merge_eligible_repos_base_branch_with_release_branch (auto_merge_test.AutoMergeTest) ... ok
+test_should_not_fail_when_branches_are_already_merged (auto_merge_test.AutoMergeTest) ... ok
+test_should_only_merge_repos_with_matching_base_and_head (auto_merge_test.AutoMergeTest) ... ok
+test_should_raise_exception_when_no_head_branch_is_found (auto_merge_test.AutoMergeTest) ... ok
+test_should_raise_exception_when_no_matching_base_branch_is_found (auto_merge_test.AutoMergeTest) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.024s
+
+OK
+```
+
+### Running Tests on MacOS/Linux
+
+This is straightforward. Just be sure you are using Python 3.
+
+From the root directory of the project, run:
+
+```
+python3 -m unittest -bv tests\auto_merge_test.py
+```
+
 ## Example Output
 
 Below is an example of merging the test release branch `AutoMergeFakeREL-0000` into `AutoMergeFakeMaster`, and then merging eligible branches into the fictious current release branch, `AutoMergeFakeREL-0001`.
