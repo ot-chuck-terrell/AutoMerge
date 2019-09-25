@@ -5,6 +5,7 @@
 The requirements for this script are:
 - Python 3 (3.7.4). Earlier Python 3 versions _may_ work, but are not recommended.
 - A GitHub API access token that has permissions to read/write repositories within the OneTech organization.
+  - !!!Make sure new token has all repo access!!!
 
 You can download and install the newest version of Python, [here](https://www.python.org/downloads/).
 
